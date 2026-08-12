@@ -6,23 +6,19 @@ sudo vi /etc/nginx/conf.d/portfolio.conf
 2. Add below code to reverse proxy file:
 server {
     listen 80;
-    
-    # Put your EC2 Public IP here for now. Change to your domain later!
-    server_name YOUR_FRONTEND_PUBLIC_IP;
 
-    # 1. Serve the Frontend HTML
-    location / {
-        root /usr/share/nginx/html;
-        index index.html;
-    }
-
-    # 2. Reverse Proxy for the Backend API
-    location /api/ {
-        proxy_pass http://<YOUR_INTERNAL_ALB_DNS>;
-        
+    location /products {
+        proxy_pass http://internal-BE-Alb-INTERNET-1609149333.us-east-1.elb.amazonaws.com;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location / {
+        root /usr/share/nginx/html;
+        index index.html;
+        try_files $uri $uri/ =404;
     }
 }
 
