@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Product Catalog Management System</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #eef2f7;
+      margin: 40px;
+      color: #333;
+    }
+
+    /* Header Styling */
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      background: linear-gradient(90deg, #2980b9, #6dd5fa);
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+    .header img {
+      height: 60px;
+      border-radius: 6px;
+      background: white;
+      padding: 5px;
+    }
+    .header h2 {
+      font-size: 28px;
+      font-weight: bold;
+      color: #fff;
+      letter-spacing: 1px;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+
+    /* Button Styling */
+    button {
+      padding: 12px 20px;
+      border: none;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    button:hover {
+      transform: scale(1.05);
+      opacity: 0.9;
+    }
+    .list-btn { background-color: #3498db; color: white; margin-top: 20px; }
+    .add-btn { background-color: #2ecc71; color: white; }
+    .update-btn { background-color: #f39c12; color: white; margin-left: 10px; }
+    .delete-btn { background-color: #e74c3c; color: white; }
+
+    /* Table Styling */
+    table {
+      width: 90%;
+      margin: 20px auto;
+      border-collapse: collapse;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      border-radius: 8px;
+      overflow: hidden;
+      background-color: #fff;
+    }
+    th, td {
+      padding: 12px;
+      text-align: left;
+    }
+    th {
+      background: #34495e;
+      color: #fff;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    tr:nth-child(even) { background-color: #f4f6f8; }
+    tr:hover td { background-color: #ecf0f1; }
+
+    /* Form Card Styling */
+    .form-card {
+      background: #ffffff;
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 6px 14px rgba(0,0,0,0.15);
+      width: 80%;
+      margin: 30px auto;
+      transition: 0.3s;
+    }
+    .form-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 18px rgba(0,0,0,0.2);
+    }
+
+    .form-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 15px;
+    }
+    .form-row input {
+      flex: 1;
+      min-width: 150px;
+      padding: 12px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      transition: border-color 0.3s;
+    }
+    .form-row input:focus {
+      border-color: #3498db;
+      outline: none;
+      box-shadow: 0 0 6px rgba(52,152,219,0.3);
+    }
+    .form-row button {
+      flex: 0;
+      padding: 12px 20px;
+      border-radius: 6px;
+      font-weight: 600;
+    }
+
+    #formMsg {
+      margin-top: 10px;
+      font-weight: bold;
+      text-align: center;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="header">
+    <img src="https://a0.awsstatic.com/libra-css/images/logos/aws_logo_smile_1200x630.png" alt="AWS Logo">
+    <h2>Product Catalog Management System</h2>
+  </div>
+
+  <!-- List Products Button -->
+  <button class="list-btn" onclick="loadProducts()">List Products</button>
+
+  <!-- Products Table -->
+  <table id="productTable">
+    <tr>
+      <th>ID</th>
+      <th>Name</th>
+      <th>Price</th>
+      <th>Stock</th>
+      <th>Actions</th>
+    </tr>
+  </table>
+
+  <!-- Add / Update Product Form -->
+  <h3 style="text-align:center; margin-top:40px;">Add / Update Product</h3>
+  <div class="form-card">
+    <form id="productForm">
+      <input type="hidden" id="productId">
+      <div class="form-row">
+        <input type="text" id="name" placeholder="Enter Product Name" required>
+        <input type="number" id="price" placeholder="Enter Price" required>
+        <input type="number" id="stock" placeholder="Enter Stock" required>
+        <button class="add-btn" type="submit">Save Product</button>
+      </div>
+    </form>
+  </div>
+
+  <p id="formMsg"></p>
+
+  <script>
+    const backendIP = ""; // empty → relative paths through reverse proxy
+
+    function loadProducts() {
+      const table = document.getElementById("productTable");
+      table.innerHTML = `
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Price</th>
+          <th>Stock</th>
+          <th>Actions</th>
+        </tr>
+      `;
+
+      fetch(`${backendIP}/products`)
+        .then(res => res.json())
+        .then(products => {
+          products.forEach(product => {
+            const row = table.insertRow();
+            row.insertCell(0).innerText = product.id;
+            row.insertCell(1).innerText = product.name;
+            row.insertCell(2).innerText = product.price;
+            row.insertCell(3).innerText = product.stock;
+
+            const actionCell = row.insertCell(4);
+
+            const deleteBtn = document.createElement("button");
+            deleteBtn.innerText = "Delete";
+            deleteBtn.className = "delete-btn";
+            deleteBtn.onclick = () => deleteProduct(product.id);
+            actionCell.appendChild(deleteBtn);
+
+            const updateBtn = document.createElement("button");
+            updateBtn.innerText = "Update";
+            updateBtn.className = "update-btn";
+            updateBtn.onclick = () => fillForm(product);
+            actionCell.appendChild(updateBtn);
+          });
+        })
+        .catch(err => console.error(err));
+    }
+
+    function fillForm(product) {
+      document.getElementById("productId").value = product.id;
+      document.getElementById("name").value = product.name;
+      document.getElementById("price").value = product.price;
+      document.getElementById("stock").value = product.stock;
+    }
+
+    function deleteProduct(id) {
+      if (!confirm("Delete this product?")) return;
+      fetch(`${backendIP}/products/delete/${id}`, { method: "DELETE" })
+        .then(res => res.json())
+        .then(result => {
+          alert(result.message || result.error);
+          loadProducts();
+        })
+        .catch(err => console.error(err));
+    }
+
+    document.getElementById("productForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+      const id = document.getElementById("productId").value;
+      const name = document.getElementById("name").value;
+      const price = document.getElementById("price").value;
+      const stock = document.getElementById("stock").value;
+
+      let url = `${backendIP}/products/add`;
+      let method = "POST";
+      if (id) {
+        url = `${backendIP}/products/update/${id}`;
+        method = "PUT";
+      }
+
+      fetch(url, {
+        method: method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, price, stock })
+      })
+      .then(res => res.json())
+      .then(result => {
+        document.getElementById("formMsg").textContent = result.message || result.error;
+        document.getElementById("productForm").reset();
+        loadProducts();
+      })
+      .catch(err => console.error(err));
+    });
+
+    loadProducts();
+  </script>
+</body>
+</html>
