@@ -42,6 +42,8 @@ INSERT INTO products (name, price, stock) VALUES
 ('Studio Condenser Microphone', 199.50, 40),
 ('Mechanical Switch Tester', 15.00, 150);
 
+ Commit;
+``` 
 
 Project File Structure
 Plaintext
@@ -80,8 +82,18 @@ db_read_config = {
     'password': 'YOUR_PASSWORD',
     'database': 'prod'
 }
-4. Run the ApplicationStart your Flask server:Bashpython app.py
-The application will run locally on http://0.0.0.0:5000.🔌 API Endpoints ReferenceOperationHTTP MethodEndpoint RouteDescriptionList ProductsGET/productsFetches all products (checks Redis cache first; falls back to RDS Reader).Get ProductGET/products/<id>Fetches a single product by its unique ID.Add ProductPOST/products/addInserts a new product into RDS Writer and invalidates products:all cache.Update ProductPUT/products/update/<id>Updates product details and clears specific product and list caches.Delete ProductDELETE/products/delete/<id>Removes product from database and clears associated cache entries.🧪 Testing with cURLYou can test your backend endpoints directly via terminal commands:Bash# Get all products
+4. Run the ApplicationStart your Flask server: python app.py
+
+Behavior
+- On first run the script queries RDS and stores the result in Redis with a TTL (default 90s).
+- Subsequent runs (within TTL) will return results from Redis cache.
+- After the TTL expires, the next run will reload data from RDS and refresh the cache.
+
+Notes
+- Ensure your EC2 security group can reach RDS on port 3306 and ElastiCache on port 6379.
+- For production, use IAM, parameter stores, or secret managers for secrets.
+
+
 curl -X GET http://localhost:5000/products
 
 # Add a new product
